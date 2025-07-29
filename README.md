@@ -27,3 +27,5 @@
 - Prices are basically the same... need further detail.
 
 ### 5th Commit
+
+- Added a volatility visualization to see the price spread between High and Low prices based on the three dataframes.
