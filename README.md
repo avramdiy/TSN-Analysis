@@ -18,6 +18,8 @@
 
 ### 3rd Commit
 
+- Build a visualization route that compares the yearly average "Close" price for each of the three filtered TSN datasets (df_05_08, df_09_12, df_13_17) on the same line graph.
+
 ### 4th Commit
 
 ### 5th Commit
