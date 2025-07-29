@@ -75,6 +75,42 @@ def close_compare():
 
     return f'<h2>Yearly Avg Close Comparison</h2><img src="data:image/png;base64,{plot_url}"/>'
 
+@app.route('/open_compare')
+def open_compare():
+    # Copy and prepare data
+    df_05_open = df_05_08.copy()
+    df_09_open = df_09_12.copy()
+    df_13_open = df_13_17.copy()
+
+    df_05_open['Year'] = df_05_open['Date'].dt.year
+    df_09_open['Year'] = df_09_open['Date'].dt.year
+    df_13_open['Year'] = df_13_open['Date'].dt.year
+
+    # Group by Year and get average Open price
+    avg_05_open = df_05_open.groupby('Year')['Open'].mean()
+    avg_09_open = df_09_open.groupby('Year')['Open'].mean()
+    avg_13_open = df_13_open.groupby('Year')['Open'].mean()
+
+    # Plot
+    plt.figure(figsize=(10, 6))
+    plt.plot(avg_05_open.index, avg_05_open.values, marker='o', label='2005–2008')
+    plt.plot(avg_09_open.index, avg_09_open.values, marker='o', label='2009–2012')
+    plt.plot(avg_13_open.index, avg_13_open.values, marker='o', label='2013–2017')
+    plt.title('Yearly Avg Open Price (TSN)')
+    plt.xlabel('Year')
+    plt.ylabel('Avg Open Price')
+    plt.legend()
+    plt.grid(True)
+
+    # Convert to image
+    img = BytesIO()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    plot_url = base64.b64encode(img.getvalue()).decode()
+    plt.close()
+
+    return f'<h2>Yearly Avg Open Comparison</h2><img src="data:image/png;base64,{plot_url}"/>'
+
 
 if __name__ == '__main__':
     app.run(debug=True)
