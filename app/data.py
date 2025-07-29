@@ -1,8 +1,10 @@
-from flask import Flask, render_template_string
+from flask import Flask, render_template_string, url_for
 import pandas as pd
 import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
+import os
+os.makedirs('static', exist_ok=True)
 
 
 app = Flask(__name__)
@@ -110,6 +112,50 @@ def open_compare():
     plt.close()
 
     return f'<h2>Yearly Avg Open Comparison</h2><img src="data:image/png;base64,{plot_url}"/>'
+
+@app.route('/volatility')
+def volatility():
+    # Ensure date columns are in datetime format
+    df_05_08['Date'] = pd.to_datetime(df_05_08['Date'])
+    df_09_12['Date'] = pd.to_datetime(df_09_12['Date'])
+    df_13_17['Date'] = pd.to_datetime(df_13_17['Date'])
+
+    # Calculate daily volatility
+    df_05_08['Volatility'] = df_05_08['High'] - df_05_08['Low']
+    df_09_12['Volatility'] = df_09_12['High'] - df_09_12['Low']
+    df_13_17['Volatility'] = df_13_17['High'] - df_13_17['Low']
+
+    # Group by year and take the mean
+    vol_05_09 = df_05_08.groupby(df_05_08['Date'].dt.year)['Volatility'].mean()
+    vol_10_14 = df_09_12.groupby(df_09_12['Date'].dt.year)['Volatility'].mean()
+    vol_15_17 = df_13_17.groupby(df_13_17['Date'].dt.year)['Volatility'].mean()
+
+    # Plotting
+    plt.figure(figsize=(10, 6))
+    plt.plot(vol_05_09.index, vol_05_09.values, label='2005–2009', marker='o')
+    plt.plot(vol_10_14.index, vol_10_14.values, label='2010–2014', marker='s')
+    plt.plot(vol_15_17.index, vol_15_17.values, label='2015–2017', marker='^')
+    plt.title('Yearly Average Volatility (High - Low) for TSN')
+    plt.xlabel('Year')
+    plt.ylabel('Average Daily High-Low Spread')
+    plt.legend()
+    plt.grid(True)
+
+    # Save and return image
+    plot_path = os.path.join('static', 'volatility.png')
+    plt.savefig(plot_path)
+    plt.close()
+
+    return render_template_string(f'''
+    <!DOCTYPE html>
+    <html>
+    <head><title>Volatility Chart</title></head>
+    <body>
+        <h1>Price Volatility (High - Low)</h1>
+        <img src="{url_for('static', filename='volatility.png')}" alt="Volatility Chart">
+    </body>
+    </html>
+    ''')
 
 
 if __name__ == '__main__':
